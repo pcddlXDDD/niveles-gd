@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Niveles</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      background-color: #121212;
+      color: #ffffff;
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      text-align: center;
+    }
+
+    h1 {
+      margin-bottom: 40px;
+      font-weight: 400;
+      color: #e0e0e0;
+      padding: 0 16px;
+    }
+
+    .button {
+      background-color: #1f1f1f;
+      border: 1px solid #333;
+      color: #fff;
+      padding: 14px 28px;
+      margin: 10px;
+      text-decoration: none;
+      border-radius: 10px;
+      transition: background-color 0.3s, transform 0.2s;
+      font-size: 17px;
+      width: 80%;
+      max-width: 300px;
+      display: inline-block;
+    }
+
+    .button:hover {
+      background-color: #2a2a2a;
+      transform: scale(1.03);
+    }
+
+    @media (max-width: 480px) {
+      h1 {
+        font-size: 22px;
+        margin-bottom: 30px;
+      }
+
+      .button {
+        font-size: 16px;
+        padding: 12px 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>Gestión de Niveles</h1>
+  <a class="button" href="https://docs.google.com/spreadsheets/d/1iyOYeq9oeQCTPmUiz17zKKOCU0ZE5QKd8-fAovFGwCc/edit?usp=drivesdk" target="_blank">Ver niveles</a>
+  <a class="button" href="https://docs.google.com/forms/d/e/1FAIpQLScU0HQQHWZlOUqjdBcoMTpexW7lyTmRhESv0c4z5D2X7uhgnA/viewform?usp=header" target="_blank">Subir niveles</a>
+</body>
+</html>
