@@ -5,152 +5,142 @@
   <title>Lista de Niveles</title>
   <style>
     body {
-      background-color: #1e1e1e;
-      color: #f2f2f2;
+      background-color: #121212;
+      color: #f0f0f0;
       font-family: sans-serif;
       margin: 0;
-      padding: 2rem;
+      padding: 0;
+    }
+
+    header {
+      position: fixed;
+      top: 0;
+      right: 0;
+      padding: 10px 15px;
+      background-color: #1e1e1e;
       display: flex;
-      flex-direction: column;
-      align-items: center;
+      gap: 10px;
+      z-index: 100;
+      border-bottom-left-radius: 10px;
+    }
+
+    header a, header button {
+      text-decoration: none;
+      background-color: #4CAF50;
+      color: white;
+      padding: 8px 12px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    header button {
+      background-color: #3a3a3a;
     }
 
     h1 {
       text-align: center;
-      margin-bottom: 2rem;
-    }
-
-    #lista {
-      width: 100%;
-      max-width: 600px;
+      margin-top: 70px;
     }
 
     .nivel {
-      background: #2a2a2a;
-      border-radius: 12px;
-      box-shadow: 4px 4px 0 #111;
-      padding: 1.2rem;
-      margin-bottom: 1.5rem;
+      background-color: #1e1e1e;
+      padding: 15px;
+      border-radius: 10px;
+      margin: 15px auto;
+      max-width: 500px;
+      box-shadow: 0 0 10px #00000055;
     }
 
     .nivel h2 {
-      font-size: 1.5rem;
-      margin: 0 0 0.5rem 0;
-      font-weight: bold;
-      color: #fff;
+      margin: 0;
+      font-size: 22px;
     }
 
-    .linea {
+    .info {
       display: flex;
       justify-content: space-between;
-      font-weight: bold;
-      border-top: 1px solid #666;
-      padding-top: 0.4rem;
-      margin-top: 0.5rem;
-      color: #ddd;
+      margin: 10px 0;
     }
 
-    .nivel p {
-      margin: 0.3rem 0;
-      color: #ccc;
+    .extra {
+      margin-top: 10px;
     }
 
-    .boton-copiar {
-      background: #444;
-      color: #eee;
-      border: none;
-      border-radius: 8px;
-      padding: 0.4rem 1rem;
-      font-weight: bold;
-      cursor: pointer;
-      float: right;
-      margin-top: 0.5rem;
-    }
-
-    .boton-copiar:hover {
-      background: #666;
-    }
-
-    .copiado {
-      color: #4caf50;
-      font-size: 0.9rem;
-      margin-top: 0.3rem;
-    }
-
-    .subir-btn {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      background-color: #4caf50;
+    .id-btn {
+      margin-top: 10px;
+      background-color: #333;
       color: white;
-      padding: 12px 20px;
       border: none;
-      border-radius: 8px;
-      font-weight: bold;
-      font-size: 1rem;
-      text-decoration: none;
-      box-shadow: 2px 2px 6px #000;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
     }
 
-    .subir-btn:hover {
-      background-color: #45a045;
+    .id-btn:hover {
+      background-color: #555;
     }
   </style>
 </head>
 <body>
+  <header>
+    <a href="https://tally.so/r/3y8WGd" target="_blank">subir niveles</a>
+    <button onclick="cargarDatos()">🔄</button>
+  </header>
+
   <h1>Lista de Niveles</h1>
-  <div id="lista"></div>
-
-  <a href="https://tally.so/r/3y8WGd" class="subir-btn" target="_blank">subir niveles</a>
-
-  <!-- PapaParse CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <div id="niveles"></div>
 
   <script>
-    const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQKII4HN64OYtI6VQoWHBsgYJMOOB3A6_rLMcxb6QZJDvHeGQWRY-xbCveF1GNvh6JBUOv2F2-Ia-oP/pub?gid=0&single=true&output=csv";
+    async function cargarDatos() {
+      const contenedor = document.getElementById("niveles");
+      contenedor.innerHTML = "Cargando...";
+      try {
+        const respuesta = await fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vQKII4HN64OYtI6VQoWHBsgYJMOOB3A6_rLMcxb6QZJDvHeGQWRY-xbCveF1GNvh6JBUOv2F2-Ia-oP/pub?gid=0&single=true&output=csv");
+        const texto = await respuesta.text();
+        const filas = texto.trim().split("\n").map(f => f.split(","));
+        const [encabezado, ...datos] = filas;
 
-    fetch(url)
-      .then(res => res.text())
-      .then(csvText => {
-        const data = Papa.parse(csvText, { header: true }).data;
-        const lista = document.getElementById("lista");
+        const indices = {
+          nombre: encabezado.indexOf("nombre del nivel"),
+          dificultad: encabezado.indexOf("dificultad"),
+          modo: encabezado.indexOf("modo"),
+          estrellas: encabezado.indexOf("estrellas"),
+          id: encabezado.indexOf("id"),
+          autor: encabezado.indexOf("tu nombre")
+        };
 
-        data.forEach((fila, i) => {
-          const autor = fila["tu nombre"];
-          const nivel = fila["nombre del nivel"];
-          const id = fila["id"];
-          const dificultad = fila["dificultad"];
-          const estrellas = fila["estrellas"];
-          const modo = fila["modo"];
+        contenedor.innerHTML = "";
 
-          if (!nivel) return;
-
-          const div = document.createElement("div");
-          div.className = "nivel";
-          div.innerHTML = `
-            <h2>${nivel}</h2>
-            <div class="linea">
-              <span>dificultad: ${dificultad}</span>
-              <span>${modo}</span>
+        datos.forEach(fila => {
+          const nivel = document.createElement("div");
+          nivel.className = "nivel";
+          nivel.innerHTML = `
+            <h2>${fila[indices.nombre]}</h2>
+            <div class="info">
+              <div>dificultad: ${fila[indices.dificultad]}</div>
+              <div>${fila[indices.modo]}</div>
             </div>
-            <p>estrellas: ${estrellas}</p>
-            <p>subido por: ${autor}</p>
-            <button class="boton-copiar" onclick="copiarID('${id}', 'copiado-${i}')">copiar ID</button>
-            <div id="copiado-${i}" class="copiado" style="display:none;">ID copiado</div>
+            <div>estrellas: ${fila[indices.estrellas]}</div>
+            <div class="extra">subido por: ${fila[indices.autor]}</div>
+            <button class="id-btn" onclick="copiarID('${fila[indices.id]}')">copiar ID</button>
           `;
-          lista.appendChild(div);
+          contenedor.appendChild(nivel);
         });
-      });
-
-    function copiarID(texto, mensajeID) {
-      navigator.clipboard.writeText(texto).then(() => {
-        const mensaje = document.getElementById(mensajeID);
-        mensaje.style.display = "block";
-        setTimeout(() => {
-          mensaje.style.display = "none";
-        }, 1500);
-      });
+      } catch (e) {
+        contenedor.innerHTML = "Error al cargar los niveles.";
+        console.error(e);
+      }
     }
+
+    function copiarID(id) {
+      navigator.clipboard.writeText(id)
+        .then(() => alert("ID copiado"))
+        .catch(err => alert("Error al copiar ID"));
+    }
+
+    cargarDatos(); // carga inicial
   </script>
 </body>
 </html>
