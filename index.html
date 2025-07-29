@@ -2,70 +2,68 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Niveles</title>
+  <title>Lista de Niveles</title>
   <style>
-    * {
-      box-sizing: border-box;
-    }
-
     body {
       background-color: #121212;
-      color: #ffffff;
-      font-family: 'Segoe UI', sans-serif;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
+      color: white;
+      font-family: sans-serif;
+      padding: 2rem;
+    }
+    h1 {
       text-align: center;
     }
-
-    h1 {
-      margin-bottom: 40px;
-      font-weight: 400;
-      color: #e0e0e0;
-      padding: 0 16px;
-    }
-
-    .button {
-      background-color: #1f1f1f;
+    .nivel {
       border: 1px solid #333;
-      color: #fff;
-      padding: 14px 28px;
-      margin: 10px;
-      text-decoration: none;
-      border-radius: 10px;
-      transition: background-color 0.3s, transform 0.2s;
-      font-size: 17px;
-      width: 80%;
-      max-width: 300px;
-      display: inline-block;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      cursor: pointer;
+      background-color: #1e1e1e;
+      transition: background-color 0.2s;
     }
-
-    .button:hover {
-      background-color: #2a2a2a;
-      transform: scale(1.03);
+    .nivel:hover {
+      background-color: #2c2c2c;
     }
-
-    @media (max-width: 480px) {
-      h1 {
-        font-size: 22px;
-        margin-bottom: 30px;
-      }
-
-      .button {
-        font-size: 16px;
-        padding: 12px 20px;
-      }
+    .copiado {
+      color: #0f0;
+      font-size: 0.9rem;
     }
   </style>
 </head>
 <body>
-  <h1>Gestión de Niveles</h1>
-  <a class="button" href="https://docs.google.com/spreadsheets/d/1k1pgQoGq-_4-mXJZhP03uwVzXM_jHO0v7Z7kohlwlQc" target="_blank">Ver niveles</a>
-  <a class="button" href="https://tally.so/r/3y8WGd" target="_blank">Subir niveles</a>
+  <h1>Lista de Niveles</h1>
+  <div id="lista"></div>
+
+  <script>
+    const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQKII4HN64OYtI6VQoWHBsgYJMOOB3A6_rLMcxb6QZJDvHeGQWRY-xbCveF1GNvh6JBUOv2F2-Ia-oP/pub?gid=0&single=true&output=csv";
+
+    fetch(url)
+      .then(res => res.text())
+      .then(text => {
+        const rows = text.trim().split("\n").map(row => row.split(","));
+        const headers = rows.shift();
+        const lista = document.getElementById("lista");
+
+        rows.forEach((cols, i) => {
+          const [nombre, nivel, id, dificultad, estrellas, modo] = cols;
+          const div = document.createElement("div");
+          div.className = "nivel";
+          div.innerHTML = `
+            <strong>${nivel}</strong> (${dificultad} - ${estrellas}⭐ - ${modo})<br>
+            Autor: ${nombre}<br>
+            <small>ID: ${id}</small><br>
+            <span id="copiado-${i}" class="copiado" style="display:none;">ID copiado</span>
+          `;
+          div.onclick = () => {
+            navigator.clipboard.writeText(id);
+            const msg = document.getElementById("copiado-" + i);
+            msg.style.display = "inline";
+            setTimeout(() => msg.style.display = "none", 1500);
+          };
+          lista.appendChild(div);
+        });
+      });
+  </script>
 </body>
 </html>
