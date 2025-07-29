@@ -121,7 +121,7 @@
 
           const nombre = fila[indices.nombre] || "";
           const dificultad = fila[indices.dificultad] || "";
-          const modo = fila[indices.modo] || "";
+          const modo = fila[indices.modo]?.trim() || "";
           const estrellas = fila[indices.estrellas] || "";
           const id = fila[indices.id] || "";
           const autor = fila[indices.autor] || "";
@@ -131,7 +131,7 @@
             <button class="id-btn" onclick="copiarID('${id}')">copiar ID</button>
             <div class="info">
               <div>dificultad: ${dificultad}</div>
-              <div>${modo ? `modo: ${modo}` : ""}</div>
+              <div>${modo}</div>
             </div>
             <div>estrellas: ${estrellas}</div>
             <div class="extra">subido por: ${autor}</div>
