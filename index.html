@@ -5,24 +5,39 @@
   <title>Lista de Niveles</title>
   <style>
     body {
-      background-color: #f2f2f2;
+      background-color: #1e1e1e;
+      color: #f2f2f2;
       font-family: sans-serif;
+      margin: 0;
       padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    #lista {
+      width: 100%;
+      max-width: 600px;
     }
 
     .nivel {
-      background: #e6e6e6;
+      background: #2a2a2a;
       border-radius: 12px;
-      box-shadow: 4px 4px 0 #aaa;
+      box-shadow: 4px 4px 0 #111;
       padding: 1.2rem;
       margin-bottom: 1.5rem;
-      max-width: 500px;
     }
 
     .nivel h2 {
       font-size: 1.5rem;
       margin: 0 0 0.5rem 0;
       font-weight: bold;
+      color: #fff;
     }
 
     .linea {
@@ -32,15 +47,17 @@
       border-top: 1px solid #666;
       padding-top: 0.4rem;
       margin-top: 0.5rem;
+      color: #ddd;
     }
 
     .nivel p {
       margin: 0.3rem 0;
+      color: #ccc;
     }
 
     .boton-copiar {
-      background: #999;
-      color: #333;
+      background: #444;
+      color: #eee;
       border: none;
       border-radius: 8px;
       padding: 0.4rem 1rem;
@@ -50,16 +67,41 @@
       margin-top: 0.5rem;
     }
 
+    .boton-copiar:hover {
+      background: #666;
+    }
+
     .copiado {
-      color: green;
+      color: #4caf50;
       font-size: 0.9rem;
       margin-top: 0.3rem;
+    }
+
+    .subir-btn {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background-color: #4caf50;
+      color: white;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      font-size: 1rem;
+      text-decoration: none;
+      box-shadow: 2px 2px 6px #000;
+    }
+
+    .subir-btn:hover {
+      background-color: #45a045;
     }
   </style>
 </head>
 <body>
   <h1>Lista de Niveles</h1>
   <div id="lista"></div>
+
+  <a href="https://tally.so/r/3y8WGd" class="subir-btn" target="_blank">subir niveles</a>
 
   <!-- PapaParse CDN -->
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -81,7 +123,7 @@
           const estrellas = fila["estrellas"];
           const modo = fila["modo"];
 
-          if (!nivel) return; // Salta filas vacías
+          if (!nivel) return;
 
           const div = document.createElement("div");
           div.className = "nivel";
