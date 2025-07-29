@@ -5,29 +5,55 @@
   <title>Lista de Niveles</title>
   <style>
     body {
-      background-color: #121212;
-      color: white;
+      background-color: #f2f2f2;
       font-family: sans-serif;
       padding: 2rem;
     }
-    h1 {
-      text-align: center;
-    }
+
     .nivel {
-      border: 1px solid #333;
+      background: #e6e6e6;
+      border-radius: 12px;
+      box-shadow: 4px 4px 0 #aaa;
+      padding: 1.2rem;
+      margin-bottom: 1.5rem;
+      max-width: 500px;
+    }
+
+    .nivel h2 {
+      font-size: 1.5rem;
+      margin: 0 0 0.5rem 0;
+      font-weight: bold;
+    }
+
+    .linea {
+      display: flex;
+      justify-content: space-between;
+      font-weight: bold;
+      border-top: 1px solid #666;
+      padding-top: 0.4rem;
+      margin-top: 0.5rem;
+    }
+
+    .nivel p {
+      margin: 0.3rem 0;
+    }
+
+    .boton-copiar {
+      background: #999;
+      color: #333;
+      border: none;
       border-radius: 8px;
-      padding: 1rem;
-      margin-bottom: 1rem;
+      padding: 0.4rem 1rem;
+      font-weight: bold;
       cursor: pointer;
-      background-color: #1e1e1e;
-      transition: background-color 0.2s;
+      float: right;
+      margin-top: 0.5rem;
     }
-    .nivel:hover {
-      background-color: #2c2c2c;
-    }
+
     .copiado {
-      color: #0f0;
+      color: green;
       font-size: 0.9rem;
+      margin-top: 0.3rem;
     }
   </style>
 </head>
@@ -42,7 +68,7 @@
       .then(res => res.text())
       .then(text => {
         const rows = text.trim().split("\n").map(row => row.split(","));
-        const headers = rows.shift();
+        const headers = rows.shift(); // Ignorar primera fila
         const lista = document.getElementById("lista");
 
         rows.forEach((cols, i) => {
@@ -50,20 +76,29 @@
           const div = document.createElement("div");
           div.className = "nivel";
           div.innerHTML = `
-            <strong>${nivel}</strong> (${dificultad} - ${estrellas}⭐ - ${modo})<br>
-            Autor: ${nombre}<br>
-            <small>ID: ${id}</small><br>
-            <span id="copiado-${i}" class="copiado" style="display:none;">ID copiado</span>
+            <h2>"${nivel}"</h2>
+            <div class="linea">
+              <span>dificultad: "${dificultad}"</span>
+              <span>"${modo}"</span>
+            </div>
+            <p>estrellas: "${estrellas}"</p>
+            <p>subido por: "${nombre}"</p>
+            <button class="boton-copiar" onclick="copiarID('${id}', 'copiado-${i}')">copiar ID</button>
+            <div id="copiado-${i}" class="copiado" style="display:none;">ID copiado</div>
           `;
-          div.onclick = () => {
-            navigator.clipboard.writeText(id);
-            const msg = document.getElementById("copiado-" + i);
-            msg.style.display = "inline";
-            setTimeout(() => msg.style.display = "none", 1500);
-          };
           lista.appendChild(div);
         });
       });
+
+    function copiarID(texto, mensajeID) {
+      navigator.clipboard.writeText(texto).then(() => {
+        const mensaje = document.getElementById(mensajeID);
+        mensaje.style.display = "block";
+        setTimeout(() => {
+          mensaje.style.display = "none";
+        }, 1500);
+      });
+    }
   </script>
 </body>
 </html>
