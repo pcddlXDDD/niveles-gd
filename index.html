@@ -69,7 +69,7 @@
     }
 
     .id-btn {
-      margin-top: 10px;
+      margin-top: 8px;
       background-color: #333;
       color: white;
       border: none;
@@ -100,7 +100,9 @@
         const respuesta = await fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vQKII4HN64OYtI6VQoWHBsgYJMOOB3A6_rLMcxb6QZJDvHeGQWRY-xbCveF1GNvh6JBUOv2F2-Ia-oP/pub?gid=0&single=true&output=csv");
         const texto = await respuesta.text();
         const filas = texto.trim().split("\n").map(f => f.split(","));
-        const [encabezado, ...datos] = filas;
+        const [encabezadoRaw, ...datos] = filas;
+
+        const encabezado = encabezadoRaw.map(h => h.trim().toLowerCase());
 
         const indices = {
           nombre: encabezado.indexOf("nombre del nivel"),
@@ -116,15 +118,23 @@
         datos.forEach(fila => {
           const nivel = document.createElement("div");
           nivel.className = "nivel";
+
+          const nombre = fila[indices.nombre] || "";
+          const dificultad = fila[indices.dificultad] || "";
+          const modo = fila[indices.modo] || "";
+          const estrellas = fila[indices.estrellas] || "";
+          const id = fila[indices.id] || "";
+          const autor = fila[indices.autor] || "";
+
           nivel.innerHTML = `
-            <h2>${fila[indices.nombre]}</h2>
+            <h2>${nombre}</h2>
+            <button class="id-btn" onclick="copiarID('${id}')">copiar ID</button>
             <div class="info">
-              <div>dificultad: ${fila[indices.dificultad]}</div>
-              <div>${fila[indices.modo]}</div>
+              <div>dificultad: ${dificultad}</div>
+              <div>${modo ? `modo: ${modo}` : ""}</div>
             </div>
-            <div>estrellas: ${fila[indices.estrellas]}</div>
-            <div class="extra">subido por: ${fila[indices.autor]}</div>
-            <button class="id-btn" onclick="copiarID('${fila[indices.id]}')">copiar ID</button>
+            <div>estrellas: ${estrellas}</div>
+            <div class="extra">subido por: ${autor}</div>
           `;
           contenedor.appendChild(nivel);
         });
