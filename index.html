@@ -1,75 +1,38 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Lista de Niveles</title>
   <style>
     body {
-      background-color: #121212;
-      color: #f0f0f0;
-      font-family: sans-serif;
       margin: 0;
-      padding: 0;
-    }
-
-    header {
-      position: fixed;
-      top: 0;
-      right: 0;
-      padding: 10px 15px;
-      background-color: #1e1e1e;
-      display: flex;
-      gap: 10px;
-      z-index: 100;
-      border-bottom-left-radius: 10px;
-    }
-
-    header a, header button {
-      text-decoration: none;
-      background-color: #4CAF50;
+      font-family: sans-serif;
+      background-color: #121212;
       color: white;
-      padding: 8px 12px;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 14px;
-    }
-
-    header button {
-      background-color: #3a3a3a;
+      text-align: center;
     }
 
     h1 {
-      text-align: center;
-      margin-top: 70px;
+      margin-top: 80px;
     }
 
     .nivel {
+      position: relative;
       background-color: #1e1e1e;
       padding: 15px;
+      padding-bottom: 45px;
       border-radius: 10px;
       margin: 15px auto;
       max-width: 500px;
       box-shadow: 0 0 10px #00000055;
-    }
-
-    .nivel h2 {
-      margin: 0;
-      font-size: 22px;
-    }
-
-    .info {
-      display: flex;
-      justify-content: space-between;
-      margin: 10px 0;
-    }
-
-    .extra {
-      margin-top: 10px;
+      text-align: left;
     }
 
     .id-btn {
-      margin-top: 8px;
+      position: absolute;
+      bottom: 10px;
+      right: 10px;
       background-color: #333;
       color: white;
       border: none;
@@ -81,76 +44,88 @@
     .id-btn:hover {
       background-color: #555;
     }
+
+    .top-right {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      display: flex;
+      gap: 10px;
+      z-index: 10;
+    }
+
+    .upload-btn, .reload-btn {
+      background-color: #2ecc71;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 8px;
+      color: white;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .reload-btn {
+      background-color: #3498db;
+    }
+
+    .upload-btn:hover {
+      background-color: #27ae60;
+    }
+
+    .reload-btn:hover {
+      background-color: #2980b9;
+    }
+
   </style>
 </head>
 <body>
-  <header>
-    <a href="https://tally.so/r/3y8WGd" target="_blank">subir niveles</a>
-    <button onclick="cargarDatos()">🔄</button>
-  </header>
+  <div class="top-right">
+    <button class="reload-btn" onclick="cargarNiveles()">🔄</button>
+    <a href="https://tally.so/r/3y8WGd" target="_blank">
+      <button class="upload-btn">subir niveles</button>
+    </a>
+  </div>
 
   <h1>Lista de Niveles</h1>
   <div id="niveles"></div>
 
   <script>
-    async function cargarDatos() {
+    async function cargarNiveles() {
       const contenedor = document.getElementById("niveles");
-      contenedor.innerHTML = "Cargando...";
+      contenedor.innerHTML = "Cargando niveles...";
+
       try {
-        const respuesta = await fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vQKII4HN64OYtI6VQoWHBsgYJMOOB3A6_rLMcxb6QZJDvHeGQWRY-xbCveF1GNvh6JBUOv2F2-Ia-oP/pub?gid=0&single=true&output=csv");
-        const texto = await respuesta.text();
-        const filas = texto.trim().split("\n").map(f => f.split(","));
-        const [encabezadoRaw, ...datos] = filas;
-
-        const encabezado = encabezadoRaw.map(h => h.trim().toLowerCase());
-
-        const indices = {
-          nombre: encabezado.indexOf("nombre del nivel"),
-          dificultad: encabezado.indexOf("dificultad"),
-          modo: encabezado.indexOf("modo"),
-          estrellas: encabezado.indexOf("estrellas"),
-          id: encabezado.indexOf("id"),
-          autor: encabezado.indexOf("tu nombre")
-        };
+        const res = await fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vQKII4HN64OYtI6VQoWHBsgYJMOOB3A6_rLMcxb6QZJDvHeGQWRY-xbCveF1GNvh6JBUOv2F2-Ia-oP/pub?output=csv");
+        const csv = await res.text();
+        const filas = csv.trim().split("\n").slice(1).map(f => f.split(","));
 
         contenedor.innerHTML = "";
 
-        datos.forEach(fila => {
-          const nivel = document.createElement("div");
-          nivel.className = "nivel";
-
-          const nombre = fila[indices.nombre] || "";
-          const dificultad = fila[indices.dificultad] || "";
-          const modo = fila[indices.modo]?.trim() || "";
-          const estrellas = fila[indices.estrellas] || "";
-          const id = fila[indices.id] || "";
-          const autor = fila[indices.autor] || "";
-
-          nivel.innerHTML = `
-            <h2>${nombre}</h2>
+        for (const fila of filas) {
+          const [nombre, nivel, id, dificultad, estrellas, modo] = fila;
+          const div = document.createElement("div");
+          div.className = "nivel";
+          div.innerHTML = `
+            <strong>"${nivel}"</strong><br>
+            dificultad: "${dificultad}" &nbsp;&nbsp;&nbsp; "${modo}"<br>
+            estrellas: "${estrellas}"<br>
+            subido por: "${nombre}"<br>
             <button class="id-btn" onclick="copiarID('${id}')">copiar ID</button>
-            <div class="info">
-              <div>dificultad: ${dificultad}</div>
-              <div>${modo}</div>
-            </div>
-            <div>estrellas: ${estrellas}</div>
-            <div class="extra">subido por: ${autor}</div>
           `;
-          contenedor.appendChild(nivel);
-        });
-      } catch (e) {
-        contenedor.innerHTML = "Error al cargar los niveles.";
-        console.error(e);
+          contenedor.appendChild(div);
+        }
+
+      } catch (error) {
+        contenedor.innerHTML = "Error al cargar niveles.";
       }
     }
 
-    function copiarID(id) {
-      navigator.clipboard.writeText(id)
-        .then(() => alert("ID copiado"))
-        .catch(err => alert("Error al copiar ID"));
+    function copiarID(texto) {
+      navigator.clipboard.writeText(texto);
+      alert("ID copiada: " + texto);
     }
 
-    cargarDatos(); // carga inicial
+    cargarNiveles();
   </script>
 </body>
 </html>
