@@ -74,25 +74,25 @@
         const lista = document.getElementById("lista");
 
         data.forEach((fila, i) => {
-          const nombre = fila["nombre"];
+          const autor = fila["tu nombre"];
           const nivel = fila["nombre del nivel"];
           const id = fila["id"];
           const dificultad = fila["dificultad"];
           const estrellas = fila["estrellas"];
           const modo = fila["modo"];
 
-          if (!nivel) return; // Evita filas vacías
+          if (!nivel) return; // Salta filas vacías
 
           const div = document.createElement("div");
           div.className = "nivel";
           div.innerHTML = `
-            <h2>"${nivel}"</h2>
+            <h2>${nivel}</h2>
             <div class="linea">
-              <span>dificultad: "${dificultad}"</span>
-              <span>"${modo}"</span>
+              <span>dificultad: ${dificultad}</span>
+              <span>${modo}</span>
             </div>
-            <p>estrellas: "${estrellas}"</p>
-            <p>subido por: "${nombre}"</p>
+            <p>estrellas: ${estrellas}</p>
+            <p>subido por: ${autor}</p>
             <button class="boton-copiar" onclick="copiarID('${id}', 'copiado-${i}')">copiar ID</button>
             <div id="copiado-${i}" class="copiado" style="display:none;">ID copiado</div>
           `;
