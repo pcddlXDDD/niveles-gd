@@ -1,185 +1,159 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
   <title>Lista de Niveles</title>
   <style>
     body {
-      margin: 0;
+      background-color: #121212;
+      color: #f0f0f0;
       font-family: sans-serif;
-      background-color: #111;
-      color: #fff;
-      padding-top: 80px;
+      margin: 0;
+      padding: 0;
     }
-    .top-bar {
+
+    header {
       position: fixed;
       top: 0;
-      left: 0;
-      width: 100%;
-      background-color: #222;
-      padding: 10px;
+      right: 0;
+      padding: 10px 15px;
+      background-color: #1e1e1e;
       display: flex;
-      align-items: center;
-      justify-content: start;
       gap: 10px;
-      z-index: 999;
+      z-index: 100;
+      border-bottom-left-radius: 10px;
     }
-    .button, select {
-      background-color: #333;
-      color: #fff;
-      border: none;
+
+    header a, header button {
+      text-decoration: none;
+      background-color: #4CAF50;
+      color: white;
       padding: 8px 12px;
-      border-radius: 5px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
     }
-    .highlight {
-      background-color: yellow;
-      color: black;
-      font-weight: bold;
-      padding: 5px 10px;
-      border-radius: 5px;
+
+    header button {
+      background-color: #3a3a3a;
     }
-    .level {
-      background-color: #222;
-      border: 1px solid #333;
-      margin: 10px;
-      padding: 10px;
+
+    h1 {
+      text-align: center;
+      margin-top: 70px;
+    }
+
+    .nivel {
+      background-color: #1e1e1e;
+      padding: 15px;
       border-radius: 10px;
+      margin: 15px auto;
+      max-width: 500px;
+      box-shadow: 0 0 10px #00000055;
+      position: relative;
     }
-    .level button {
-      margin-top: 5px;
+
+    .nivel h2 {
+      margin: 0;
+      font-size: 22px;
+    }
+
+    .info {
+      display: flex;
+      justify-content: space-between;
+      margin: 10px 0;
+    }
+
+    .extra {
+      margin-top: 10px;
+    }
+
+    .id-btn {
+      position: absolute;
+      bottom: 10px;
+      right: 10px;
+      background-color: #333;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .id-btn:hover {
+      background-color: #555;
     }
   </style>
 </head>
 <body>
-  <div class="top-bar">
-    <a href="https://tally.so/r/3y8WGd" class="button">subir niveles</a>
-    <button class="button" onclick="loadData()">🔄</button>
+  <header>
+    <a href="https://tally.so/r/3y8WGd" target="_blank">subir niveles</a>
+    <button onclick="cargarDatos()">🔄</button>
+  </header>
 
-    <select id="difficultyOrder" onchange="applyFilters()">
-      <option value="">Ordenar por dificultad</option>
-      <option value="asc">Del más fácil al más difícil</option>
-      <option value="desc">Del más difícil al más fácil</option>
-    </select>
-
-    <select id="specificDifficulty" onchange="applyFilters()">
-      <option value="">Filtrar por dificultad específica</option>
-    </select>
-
-    <select id="dateOrder" onchange="applyFilters()">
-      <option value="">Ordenar por fecha</option>
-      <option value="newest">Del más nuevo al más antiguo</option>
-      <option value="oldest">Del más antiguo al más nuevo</option>
-    </select>
-  </div>
-
-  <h2 style="text-align:center;">Lista de Niveles</h2>
-  <div id="levels"></div>
+  <h1>Lista de Niveles</h1>
+  <div id="niveles"></div>
 
   <script>
-    const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQKII4HN64OYtI6VQoWHBsgYJMOOB3A6_rLMcxb6QZJDvHeGQWRY-xbCveF1GNvh6JBUOv2F2-Ia-oP/pub?gid=0&single=true&output=csv';
-    let originalData = [];
+    async function cargarDatos() {
+      const contenedor = document.getElementById("niveles");
+      contenedor.innerHTML = "Cargando...";
+      try {
+        const respuesta = await fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vQKII4HN64OYtI6VQoWHBsgYJMOOB3A6_rLMcxb6QZJDvHeGQWRY-xbCveF1GNvh6JBUOv2F2-Ia-oP/pub?gid=0&single=true&output=csv");
+        const texto = await respuesta.text();
+        const filas = texto.trim().split("\n").map(f => f.split(","));
+        const [encabezadoRaw, ...datos] = filas;
 
-    const difficultyToStars = (difficulty) => {
-      const diff = difficulty.toLowerCase();
-      if (diff.includes("auto")) return 1;
-      if (diff.includes("easy demon")) return 10;
-      if (diff.includes("medium demon")) return 10;
-      if (diff.includes("hard demon")) return 10;
-      if (diff.includes("insane demon")) return 10;
-      if (diff.includes("extreme demon")) return 10;
-      if (diff.includes("insane")) return 8.5;
-      if (diff.includes("harder")) return 6.5;
-      if (diff.includes("hard")) return 4.5;
-      if (diff.includes("normal")) return 3;
-      if (diff.includes("easy")) return 2;
-      return 0;
-    };
+        const encabezado = encabezadoRaw.map(h => h.trim().toLowerCase());
 
-    function applyFilters() {
-      let data = [...originalData];
-      const diffOrder = document.getElementById("difficultyOrder").value;
-      const specificDiff = document.getElementById("specificDifficulty").value;
-      const dateOrder = document.getElementById("dateOrder").value;
-
-      if (specificDiff) {
-        const stars = parseInt(specificDiff);
-        data = data.filter(row => {
-          const rowStars = parseInt(row.stars) || difficultyToStars(row.difficulty);
-          return Math.round(rowStars) === stars;
-        });
-      }
-
-      if (diffOrder) {
-        data.sort((a, b) => {
-          const starsA = parseInt(a.stars) || difficultyToStars(a.difficulty);
-          const starsB = parseInt(b.stars) || difficultyToStars(b.difficulty);
-          return diffOrder === "asc" ? starsA - starsB : starsB - starsA;
-        });
-      }
-
-      if (dateOrder) {
-        data.sort((a, b) => {
-          const dateA = new Date(a.date);
-          const dateB = new Date(b.date);
-          return dateOrder === "newest" ? dateB - dateA : dateA - dateB;
-        });
-      }
-
-      displayData(data);
-    }
-
-    function displayData(data) {
-      const container = document.getElementById("levels");
-      container.innerHTML = "";
-      data.forEach(row => {
-        const div = document.createElement("div");
-        div.className = "level";
-        div.innerHTML = `
-          <strong>${row.levelName}</strong><br>
-          ID: ${row.id}<br>
-          Subido por: ${row.userName}<br>
-          Dificultad: ${row.difficulty}<br>
-          Estrellas: ${row.stars || "?"}<br>
-          <button onclick="navigator.clipboard.writeText('${row.id}')">Copiar ID</button>
-        `;
-        container.appendChild(div);
-      });
-    }
-
-    async function loadData() {
-      const res = await fetch(sheetUrl);
-      const text = await res.text();
-      const rows = text.trim().split('\n').map(r => r.split(','));
-      const headers = rows.shift();
-      originalData = rows.map(r => {
-        const row = {};
-        headers.forEach((h, i) => {
-          row[h.trim()] = r[i]?.trim();
-        });
-        return {
-          levelName: row["Level Name"],
-          id: row["ID"],
-          userName: row["Tu Nombre"],
-          difficulty: row["Dificultad"],
-          stars: row["Estrellas"],
-          date: row["Submitted at"]
+        const indices = {
+          nombre: encabezado.indexOf("nombre del nivel"),
+          dificultad: encabezado.indexOf("dificultad"),
+          modo: encabezado.indexOf("modo"),
+          estrellas: encabezado.indexOf("estrellas"),
+          id: encabezado.indexOf("id"),
+          autor: encabezado.indexOf("tu nombre")
         };
-      });
 
-      const specificSelect = document.getElementById("specificDifficulty");
-      specificSelect.innerHTML = '<option value="">Filtrar por dificultad específica</option>';
-      for (let i = 1; i <= 10; i++) {
-        const option = document.createElement("option");
-        option.value = i;
-        option.textContent = `${i} estrellas`;
-        specificSelect.appendChild(option);
+        contenedor.innerHTML = "";
+
+        datos.forEach(fila => {
+          const nivel = document.createElement("div");
+          nivel.className = "nivel";
+
+          const nombre = fila[indices.nombre] || "";
+          const dificultad = fila[indices.dificultad] || "";
+          const modo = fila[indices.modo]?.trim() || "";
+          const estrellas = fila[indices.estrellas] || "";
+          const id = fila[indices.id] || "";
+          const autor = fila[indices.autor] || "";
+
+          nivel.innerHTML = `
+            <h2>${nombre}</h2>
+            <div class="info">
+              <div>dificultad: ${dificultad}</div>
+              <div>${modo}</div>
+            </div>
+            <div>estrellas: ${estrellas}</div>
+            <div class="extra">subido por: ${autor}</div>
+            <button class="id-btn" onclick="copiarID('${id}')">copiar ID</button>
+          `;
+          contenedor.appendChild(nivel);
+        });
+      } catch (e) {
+        contenedor.innerHTML = "Error al cargar los niveles.";
+        console.error(e);
       }
-
-      applyFilters();
     }
 
-    loadData();
+    function copiarID(id) {
+      navigator.clipboard.writeText(id)
+        .then(() => alert("ID copiado"))
+        .catch(err => alert("Error al copiar ID"));
+    }
+
+    cargarDatos();
   </script>
 </body>
 </html>
