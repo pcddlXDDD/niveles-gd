@@ -1,254 +1,185 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Lista de Niveles</title>
   <style>
     body {
-      background-color: #121212;
-      color: #f0f0f0;
-      font-family: sans-serif;
       margin: 0;
-      padding: 0;
+      font-family: sans-serif;
+      background-color: #111;
+      color: #fff;
+      padding-top: 80px;
     }
-
-    header {
+    .top-bar {
       position: fixed;
       top: 0;
-      right: 0;
       left: 0;
-      padding: 10px 15px;
-      background-color: #1e1e1e;
+      width: 100%;
+      background-color: #222;
+      padding: 10px;
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      z-index: 100;
-      border-bottom: 1px solid #333;
-    }
-
-    .header-left {
-      display: flex;
+      justify-content: start;
       gap: 10px;
+      z-index: 999;
     }
-
-    header a, header button, select {
-      background-color: #4CAF50;
-      color: white;
-      padding: 6px 10px;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 14px;
-    }
-
-    select {
+    .button, select {
       background-color: #333;
+      color: #fff;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 5px;
     }
-
-    h1 {
-      text-align: center;
-      margin-top: 90px;
+    .highlight {
+      background-color: yellow;
+      color: black;
+      font-weight: bold;
+      padding: 5px 10px;
+      border-radius: 5px;
     }
-
-    .nivel {
-      background-color: #1e1e1e;
-      padding: 15px;
+    .level {
+      background-color: #222;
+      border: 1px solid #333;
+      margin: 10px;
+      padding: 10px;
       border-radius: 10px;
-      margin: 15px auto;
-      max-width: 500px;
-      box-shadow: 0 0 10px #00000055;
-      position: relative;
     }
-
-    .nivel h2 {
-      margin: 0 0 5px;
-      font-size: 22px;
-    }
-
-    .info {
-      display: flex;
-      justify-content: space-between;
-      margin: 10px 0;
-    }
-
-    .extra {
-      margin-top: 10px;
-    }
-
-    .id-btn {
-      position: absolute;
-      bottom: 10px;
-      right: 10px;
-      background-color: #333;
-      color: white;
-      border: none;
-      padding: 6px 12px;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-
-    .id-btn:hover {
-      background-color: #555;
+    .level button {
+      margin-top: 5px;
     }
   </style>
 </head>
 <body>
-  <header>
-    <div class="header-left">
-      <a href="https://tally.so/r/3y8WGd" target="_blank">subir niveles</a>
-      <button onclick="cargarDatos()">🔄</button>
-    </div>
-    <div>
-      <select id="filtroDificultad" onchange="aplicarFiltros()">
-        <option value="">Ordenar por dificultad</option>
-        <option value="asc">Del más fácil al más difícil</option>
-        <option value="desc">Del más difícil al más fácil</option>
-      </select>
-      <select id="filtroEspecifico" onchange="aplicarFiltros()">
-        <option value="">Filtrar por dificultad específica</option>
-        ${[...Array(10)].map((_, i) => `<option value="${i + 1}">${i + 1} estrellas</option>`).join("")}
-      </select>
-      <select id="filtroFecha" onchange="aplicarFiltros()">
-        <option value="">Ordenar por fecha</option>
-        <option value="nuevo">Del más nuevo al más antiguo</option>
-        <option value="viejo">Del más antiguo al más nuevo</option>
-      </select>
-    </div>
-  </header>
+  <div class="top-bar">
+    <a href="https://tally.so/r/3y8WGd" class="button">subir niveles</a>
+    <button class="button" onclick="loadData()">🔄</button>
 
-  <h1>Lista de Niveles</h1>
-  <div id="niveles"></div>
+    <select id="difficultyOrder" onchange="applyFilters()">
+      <option value="">Ordenar por dificultad</option>
+      <option value="asc">Del más fácil al más difícil</option>
+      <option value="desc">Del más difícil al más fácil</option>
+    </select>
+
+    <select id="specificDifficulty" onchange="applyFilters()">
+      <option value="">Filtrar por dificultad específica</option>
+    </select>
+
+    <select id="dateOrder" onchange="applyFilters()">
+      <option value="">Ordenar por fecha</option>
+      <option value="newest">Del más nuevo al más antiguo</option>
+      <option value="oldest">Del más antiguo al más nuevo</option>
+    </select>
+  </div>
+
+  <h2 style="text-align:center;">Lista de Niveles</h2>
+  <div id="levels"></div>
 
   <script>
-    let nivelesRaw = [];
+    const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQKII4HN64OYtI6VQoWHBsgYJMOOB3A6_rLMcxb6QZJDvHeGQWRY-xbCveF1GNvh6JBUOv2F2-Ia-oP/pub?gid=0&single=true&output=csv';
+    let originalData = [];
 
-    function dificultadEstrellas(str) {
-      const n = parseInt(str);
-      return isNaN(n) ? null : n;
-    }
+    const difficultyToStars = (difficulty) => {
+      const diff = difficulty.toLowerCase();
+      if (diff.includes("auto")) return 1;
+      if (diff.includes("easy demon")) return 10;
+      if (diff.includes("medium demon")) return 10;
+      if (diff.includes("hard demon")) return 10;
+      if (diff.includes("insane demon")) return 10;
+      if (diff.includes("extreme demon")) return 10;
+      if (diff.includes("insane")) return 8.5;
+      if (diff.includes("harder")) return 6.5;
+      if (diff.includes("hard")) return 4.5;
+      if (diff.includes("normal")) return 3;
+      if (diff.includes("easy")) return 2;
+      return 0;
+    };
 
-    function dificultadTextoADificultad(texto) {
-      texto = texto.toLowerCase();
-      if (texto.includes("auto")) return 1;
-      if (texto.includes("easy demon")) return 10;
-      if (texto.includes("easy")) return 2;
-      if (texto.includes("normal")) return 3;
-      if (texto.includes("hard demon")) return 10;
-      if (texto.includes("hard")) return 4.5; // 4 o 5
-      if (texto.includes("harder")) return 6.5; // 6 o 7
-      if (texto.includes("insane demon")) return 10;
-      if (texto.includes("insane")) return 8.5; // 8 o 9
-      if (texto.includes("extreme demon")) return 10;
-      return null;
-    }
+    function applyFilters() {
+      let data = [...originalData];
+      const diffOrder = document.getElementById("difficultyOrder").value;
+      const specificDiff = document.getElementById("specificDifficulty").value;
+      const dateOrder = document.getElementById("dateOrder").value;
 
-    function parseFecha(fecha) {
-      const d = new Date(fecha);
-      return isNaN(d.getTime()) ? null : d;
-    }
-
-    function aplicarFiltros() {
-      const ordenDificultad = document.getElementById("filtroDificultad").value;
-      const dificultadFiltro = document.getElementById("filtroEspecifico").value;
-      const ordenFecha = document.getElementById("filtroFecha").value;
-
-      let niveles = [...nivelesRaw];
-
-      if (dificultadFiltro) {
-        niveles = niveles.filter(n => n.dificultadReal === parseInt(dificultadFiltro));
-      }
-
-      if (ordenDificultad) {
-        niveles.sort((a, b) => {
-          const valA = a.dificultadReal ?? 0;
-          const valB = b.dificultadReal ?? 0;
-          return ordenDificultad === "asc" ? valA - valB : valB - valA;
+      if (specificDiff) {
+        const stars = parseInt(specificDiff);
+        data = data.filter(row => {
+          const rowStars = parseInt(row.stars) || difficultyToStars(row.difficulty);
+          return Math.round(rowStars) === stars;
         });
       }
 
-      if (ordenFecha) {
-        niveles.sort((a, b) => {
-          const timeA = a.fecha || 0;
-          const timeB = b.fecha || 0;
-          return ordenFecha === "nuevo" ? timeB - timeA : timeA - timeB;
+      if (diffOrder) {
+        data.sort((a, b) => {
+          const starsA = parseInt(a.stars) || difficultyToStars(a.difficulty);
+          const starsB = parseInt(b.stars) || difficultyToStars(b.difficulty);
+          return diffOrder === "asc" ? starsA - starsB : starsB - starsA;
         });
       }
 
-      mostrarNiveles(niveles);
+      if (dateOrder) {
+        data.sort((a, b) => {
+          const dateA = new Date(a.date);
+          const dateB = new Date(b.date);
+          return dateOrder === "newest" ? dateB - dateA : dateA - dateB;
+        });
+      }
+
+      displayData(data);
     }
 
-    function mostrarNiveles(niveles) {
-      const contenedor = document.getElementById("niveles");
-      contenedor.innerHTML = "";
-
-      niveles.forEach(n => {
+    function displayData(data) {
+      const container = document.getElementById("levels");
+      container.innerHTML = "";
+      data.forEach(row => {
         const div = document.createElement("div");
-        div.className = "nivel";
+        div.className = "level";
         div.innerHTML = `
-          <h2>${n.nombre}</h2>
-          <div class="info">
-            <div>dificultad: ${n.dificultad}</div>
-            <div>${n.modo}</div>
-          </div>
-          <div>estrellas: ${n.estrellas}</div>
-          <div class="extra">subido por: ${n.autor}</div>
-          <button class="id-btn" onclick="copiarID('${n.id}')">copiar ID</button>
+          <strong>${row.levelName}</strong><br>
+          ID: ${row.id}<br>
+          Subido por: ${row.userName}<br>
+          Dificultad: ${row.difficulty}<br>
+          Estrellas: ${row.stars || "?"}<br>
+          <button onclick="navigator.clipboard.writeText('${row.id}')">Copiar ID</button>
         `;
-        contenedor.appendChild(div);
+        container.appendChild(div);
       });
     }
 
-    async function cargarDatos() {
-      const contenedor = document.getElementById("niveles");
-      contenedor.innerHTML = "Cargando...";
-      try {
-        const respuesta = await fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vQKII4HN64OYtI6VQoWHBsgYJMOOB3A6_rLMcxb6QZJDvHeGQWRY-xbCveF1GNvh6JBUOv2F2-Ia-oP/pub?gid=0&single=true&output=csv");
-        const texto = await respuesta.text();
-        const filas = texto.trim().split("\n").map(f => f.split(","));
-        const [encabezadoRaw, ...datos] = filas;
-        const encabezado = encabezadoRaw.map(h => h.trim().toLowerCase());
-
-        const indices = {
-          nombre: encabezado.indexOf("nombre del nivel"),
-          dificultad: encabezado.indexOf("dificultad"),
-          modo: encabezado.indexOf("modo"),
-          estrellas: encabezado.indexOf("estrellas"),
-          id: encabezado.indexOf("id"),
-          autor: encabezado.indexOf("tu nombre"),
-          fecha: encabezado.indexOf("submitted at")
-        };
-
-        nivelesRaw = datos.map(fila => {
-          const estrellas = dificultadEstrellas(fila[indices.estrellas]);
-          const dificultadTexto = fila[indices.dificultad]?.trim() || "";
-          const dificultadFallback = dificultadTextoADificultad(dificultadTexto);
-
-          return {
-            nombre: fila[indices.nombre] || "",
-            dificultad: dificultadTexto,
-            modo: fila[indices.modo] || "",
-            estrellas: estrellas ?? "",
-            id: fila[indices.id] || "",
-            autor: fila[indices.autor] || "",
-            fecha: parseFecha(fila[indices.fecha]),
-            dificultadReal: estrellas ?? dificultadFallback
-          };
+    async function loadData() {
+      const res = await fetch(sheetUrl);
+      const text = await res.text();
+      const rows = text.trim().split('\n').map(r => r.split(','));
+      const headers = rows.shift();
+      originalData = rows.map(r => {
+        const row = {};
+        headers.forEach((h, i) => {
+          row[h.trim()] = r[i]?.trim();
         });
+        return {
+          levelName: row["Level Name"],
+          id: row["ID"],
+          userName: row["Tu Nombre"],
+          difficulty: row["Dificultad"],
+          stars: row["Estrellas"],
+          date: row["Submitted at"]
+        };
+      });
 
-        aplicarFiltros();
-      } catch (e) {
-        contenedor.innerHTML = "Error al cargar los niveles.";
-        console.error(e);
+      const specificSelect = document.getElementById("specificDifficulty");
+      specificSelect.innerHTML = '<option value="">Filtrar por dificultad específica</option>';
+      for (let i = 1; i <= 10; i++) {
+        const option = document.createElement("option");
+        option.value = i;
+        option.textContent = `${i} estrellas`;
+        specificSelect.appendChild(option);
       }
+
+      applyFilters();
     }
 
-    function copiarID(id) {
-      navigator.clipboard.writeText(id)
-        .then(() => alert("ID copiado"))
-        .catch(err => alert("Error al copiar ID"));
-    }
-
-    cargarDatos();
+    loadData();
   </script>
 </body>
 </html>
