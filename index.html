@@ -16,16 +16,18 @@
       position: fixed;
       top: 0;
       right: 0;
+      left: 0;
       padding: 10px 15px;
       background-color: #1e1e1e;
       display: flex;
+      flex-wrap: wrap;
       gap: 10px;
       z-index: 100;
-      border-bottom-left-radius: 10px;
+      border-bottom: 1px solid #333;
+      justify-content: flex-end;
     }
 
-    header a, header button {
-      text-decoration: none;
+    header a, header button, header select {
       background-color: #4CAF50;
       color: white;
       padding: 8px 12px;
@@ -39,9 +41,14 @@
       background-color: #3a3a3a;
     }
 
+    header select {
+      background-color: #333;
+      color: white;
+    }
+
     h1 {
       text-align: center;
-      margin-top: 70px;
+      margin-top: 120px;
     }
 
     .nivel {
@@ -88,6 +95,19 @@
 </head>
 <body>
   <header>
+    <select id="filtroDificultad" onchange="aplicarFiltros()">
+      <option value="">Filtrar por dificultad</option>
+      <option value="facil-dificil">Más fácil a más difícil</option>
+      <option value="dificil-facil">Más difícil a más fácil</option>
+      <option value="especifica">Elegir una dificultad específica</option>
+    </select>
+
+    <select id="filtroFecha" onchange="aplicarFiltros()">
+      <option value="">Ordenar por fecha</option>
+      <option value="nuevo">Más nuevo primero</option>
+      <option value="antiguo">Más antiguo primero</option>
+    </select>
+
     <a href="https://tally.so/r/3y8WGd" target="_blank">subir niveles</a>
     <button onclick="cargarDatos()">🔄</button>
   </header>
@@ -96,6 +116,13 @@
   <div id="niveles"></div>
 
   <script>
+    let datosOriginales = [];
+
+    const ordenDificultad = [
+      "easy", "normal", "hard", "harder", "insane",
+      "easy demon", "medium demon", "hard demon", "insane demon", "extreme demon"
+    ];
+
     async function cargarDatos() {
       const contenedor = document.getElementById("niveles");
       contenedor.innerHTML = "Cargando...";
@@ -104,7 +131,6 @@
         const texto = await respuesta.text();
         const filas = texto.trim().split("\n").map(f => f.split(","));
         const [encabezadoRaw, ...datos] = filas;
-
         const encabezado = encabezadoRaw.map(h => h.trim().toLowerCase());
 
         const indices = {
@@ -113,38 +139,73 @@
           modo: encabezado.indexOf("modo"),
           estrellas: encabezado.indexOf("estrellas"),
           id: encabezado.indexOf("id"),
-          autor: encabezado.indexOf("tu nombre")
+          autor: encabezado.indexOf("tu nombre"),
+          fecha: encabezado.indexOf("submitted at")
         };
 
-        contenedor.innerHTML = "";
+        datosOriginales = datos.map(fila => ({
+          nombre: fila[indices.nombre]?.trim() || "",
+          dificultad: fila[indices.dificultad]?.trim().toLowerCase() || "",
+          modo: fila[indices.modo]?.trim() || "",
+          estrellas: fila[indices.estrellas]?.trim() || "",
+          id: fila[indices.id]?.trim() || "",
+          autor: fila[indices.autor]?.trim() || "",
+          fecha: new Date(fila[indices.fecha])
+        }));
 
-        datos.forEach(fila => {
-          const nivel = document.createElement("div");
-          nivel.className = "nivel";
-
-          const nombre = fila[indices.nombre] || "";
-          const dificultad = fila[indices.dificultad] || "";
-          const modo = fila[indices.modo]?.trim() || "";
-          const estrellas = fila[indices.estrellas] || "";
-          const id = fila[indices.id] || "";
-          const autor = fila[indices.autor] || "";
-
-          nivel.innerHTML = `
-            <h2>${nombre}</h2>
-            <div class="info">
-              <div>dificultad: ${dificultad}</div>
-              <div>${modo}</div>
-            </div>
-            <div>estrellas: ${estrellas}</div>
-            <div class="extra">subido por: ${autor}</div>
-            <button class="id-btn" onclick="copiarID('${id}')">copiar ID</button>
-          `;
-          contenedor.appendChild(nivel);
-        });
+        aplicarFiltros();
       } catch (e) {
         contenedor.innerHTML = "Error al cargar los niveles.";
         console.error(e);
       }
+    }
+
+    function aplicarFiltros() {
+      const contenedor = document.getElementById("niveles");
+      contenedor.innerHTML = "";
+
+      const filtroDif = document.getElementById("filtroDificultad").value;
+      const filtroFecha = document.getElementById("filtroFecha").value;
+
+      let datosFiltrados = [...datosOriginales];
+
+      if (filtroDif === "facil-dificil") {
+        datosFiltrados.sort((a, b) => ordenDificultad.indexOf(a.dificultad) - ordenDificultad.indexOf(b.dificultad));
+      } else if (filtroDif === "dificil-facil") {
+        datosFiltrados.sort((a, b) => ordenDificultad.indexOf(b.dificultad) - ordenDificultad.indexOf(a.dificultad));
+      } else if (filtroDif === "especifica") {
+        const espec = prompt("Escribe la dificultad exacta:");
+        if (espec) {
+          datosFiltrados = datosFiltrados.filter(n => n.dificultad === espec.toLowerCase().trim());
+        }
+      }
+
+      if (filtroFecha === "nuevo") {
+        datosFiltrados.sort((a, b) => b.fecha - a.fecha);
+      } else if (filtroFecha === "antiguo") {
+        datosFiltrados.sort((a, b) => a.fecha - b.fecha);
+      }
+
+      if (datosFiltrados.length === 0) {
+        contenedor.innerHTML = "No hay niveles que coincidan con los filtros.";
+        return;
+      }
+
+      datosFiltrados.forEach(nivel => {
+        const div = document.createElement("div");
+        div.className = "nivel";
+        div.innerHTML = `
+          <h2>${nivel.nombre}</h2>
+          <div class="info">
+            <div>dificultad: ${nivel.dificultad}</div>
+            <div>${nivel.modo}</div>
+          </div>
+          <div>estrellas: ${nivel.estrellas}</div>
+          <div class="extra">subido por: ${nivel.autor}</div>
+          <button class="id-btn" onclick="copiarID('${nivel.id}')">copiar ID</button>
+        `;
+        contenedor.appendChild(div);
+      });
     }
 
     function copiarID(id) {
