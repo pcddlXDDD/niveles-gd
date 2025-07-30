@@ -20,35 +20,34 @@
       padding: 10px 15px;
       background-color: #1e1e1e;
       display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
+      justify-content: space-between;
+      align-items: center;
       z-index: 100;
       border-bottom: 1px solid #333;
-      justify-content: flex-end;
     }
 
-    header a, header button, header select {
+    .header-left {
+      display: flex;
+      gap: 10px;
+    }
+
+    header a, header button, select {
       background-color: #4CAF50;
       color: white;
-      padding: 8px 12px;
+      padding: 6px 10px;
       border: none;
-      border-radius: 8px;
+      border-radius: 6px;
       cursor: pointer;
       font-size: 14px;
     }
 
-    header button {
-      background-color: #3a3a3a;
-    }
-
-    header select {
+    select {
       background-color: #333;
-      color: white;
     }
 
     h1 {
       text-align: center;
-      margin-top: 120px;
+      margin-top: 90px;
     }
 
     .nivel {
@@ -62,7 +61,7 @@
     }
 
     .nivel h2 {
-      margin: 0;
+      margin: 0 0 5px;
       font-size: 22px;
     }
 
@@ -95,33 +94,109 @@
 </head>
 <body>
   <header>
-    <select id="filtroDificultad" onchange="aplicarFiltros()">
-      <option value="">Filtrar por dificultad</option>
-      <option value="facil-dificil">Más fácil a más difícil</option>
-      <option value="dificil-facil">Más difícil a más fácil</option>
-      <option value="especifica">Elegir una dificultad específica</option>
-    </select>
-
-    <select id="filtroFecha" onchange="aplicarFiltros()">
-      <option value="">Ordenar por fecha</option>
-      <option value="nuevo">Más nuevo primero</option>
-      <option value="antiguo">Más antiguo primero</option>
-    </select>
-
-    <a href="https://tally.so/r/3y8WGd" target="_blank">subir niveles</a>
-    <button onclick="cargarDatos()">🔄</button>
+    <div class="header-left">
+      <a href="https://tally.so/r/3y8WGd" target="_blank">subir niveles</a>
+      <button onclick="cargarDatos()">🔄</button>
+    </div>
+    <div>
+      <select id="filtroDificultad" onchange="aplicarFiltros()">
+        <option value="">Ordenar por dificultad</option>
+        <option value="asc">Del más fácil al más difícil</option>
+        <option value="desc">Del más difícil al más fácil</option>
+      </select>
+      <select id="filtroEspecifico" onchange="aplicarFiltros()">
+        <option value="">Filtrar por dificultad específica</option>
+        ${[...Array(10)].map((_, i) => `<option value="${i + 1}">${i + 1} estrellas</option>`).join("")}
+      </select>
+      <select id="filtroFecha" onchange="aplicarFiltros()">
+        <option value="">Ordenar por fecha</option>
+        <option value="nuevo">Del más nuevo al más antiguo</option>
+        <option value="viejo">Del más antiguo al más nuevo</option>
+      </select>
+    </div>
   </header>
 
   <h1>Lista de Niveles</h1>
   <div id="niveles"></div>
 
   <script>
-    let datosOriginales = [];
+    let nivelesRaw = [];
 
-    const ordenDificultad = [
-      "easy", "normal", "hard", "harder", "insane",
-      "easy demon", "medium demon", "hard demon", "insane demon", "extreme demon"
-    ];
+    function dificultadEstrellas(str) {
+      const n = parseInt(str);
+      return isNaN(n) ? null : n;
+    }
+
+    function dificultadTextoADificultad(texto) {
+      texto = texto.toLowerCase();
+      if (texto.includes("auto")) return 1;
+      if (texto.includes("easy demon")) return 10;
+      if (texto.includes("easy")) return 2;
+      if (texto.includes("normal")) return 3;
+      if (texto.includes("hard demon")) return 10;
+      if (texto.includes("hard")) return 4.5; // 4 o 5
+      if (texto.includes("harder")) return 6.5; // 6 o 7
+      if (texto.includes("insane demon")) return 10;
+      if (texto.includes("insane")) return 8.5; // 8 o 9
+      if (texto.includes("extreme demon")) return 10;
+      return null;
+    }
+
+    function parseFecha(fecha) {
+      const d = new Date(fecha);
+      return isNaN(d.getTime()) ? null : d;
+    }
+
+    function aplicarFiltros() {
+      const ordenDificultad = document.getElementById("filtroDificultad").value;
+      const dificultadFiltro = document.getElementById("filtroEspecifico").value;
+      const ordenFecha = document.getElementById("filtroFecha").value;
+
+      let niveles = [...nivelesRaw];
+
+      if (dificultadFiltro) {
+        niveles = niveles.filter(n => n.dificultadReal === parseInt(dificultadFiltro));
+      }
+
+      if (ordenDificultad) {
+        niveles.sort((a, b) => {
+          const valA = a.dificultadReal ?? 0;
+          const valB = b.dificultadReal ?? 0;
+          return ordenDificultad === "asc" ? valA - valB : valB - valA;
+        });
+      }
+
+      if (ordenFecha) {
+        niveles.sort((a, b) => {
+          const timeA = a.fecha || 0;
+          const timeB = b.fecha || 0;
+          return ordenFecha === "nuevo" ? timeB - timeA : timeA - timeB;
+        });
+      }
+
+      mostrarNiveles(niveles);
+    }
+
+    function mostrarNiveles(niveles) {
+      const contenedor = document.getElementById("niveles");
+      contenedor.innerHTML = "";
+
+      niveles.forEach(n => {
+        const div = document.createElement("div");
+        div.className = "nivel";
+        div.innerHTML = `
+          <h2>${n.nombre}</h2>
+          <div class="info">
+            <div>dificultad: ${n.dificultad}</div>
+            <div>${n.modo}</div>
+          </div>
+          <div>estrellas: ${n.estrellas}</div>
+          <div class="extra">subido por: ${n.autor}</div>
+          <button class="id-btn" onclick="copiarID('${n.id}')">copiar ID</button>
+        `;
+        contenedor.appendChild(div);
+      });
+    }
 
     async function cargarDatos() {
       const contenedor = document.getElementById("niveles");
@@ -143,69 +218,28 @@
           fecha: encabezado.indexOf("submitted at")
         };
 
-        datosOriginales = datos.map(fila => ({
-          nombre: fila[indices.nombre]?.trim() || "",
-          dificultad: fila[indices.dificultad]?.trim().toLowerCase() || "",
-          modo: fila[indices.modo]?.trim() || "",
-          estrellas: fila[indices.estrellas]?.trim() || "",
-          id: fila[indices.id]?.trim() || "",
-          autor: fila[indices.autor]?.trim() || "",
-          fecha: new Date(fila[indices.fecha])
-        }));
+        nivelesRaw = datos.map(fila => {
+          const estrellas = dificultadEstrellas(fila[indices.estrellas]);
+          const dificultadTexto = fila[indices.dificultad]?.trim() || "";
+          const dificultadFallback = dificultadTextoADificultad(dificultadTexto);
+
+          return {
+            nombre: fila[indices.nombre] || "",
+            dificultad: dificultadTexto,
+            modo: fila[indices.modo] || "",
+            estrellas: estrellas ?? "",
+            id: fila[indices.id] || "",
+            autor: fila[indices.autor] || "",
+            fecha: parseFecha(fila[indices.fecha]),
+            dificultadReal: estrellas ?? dificultadFallback
+          };
+        });
 
         aplicarFiltros();
       } catch (e) {
         contenedor.innerHTML = "Error al cargar los niveles.";
         console.error(e);
       }
-    }
-
-    function aplicarFiltros() {
-      const contenedor = document.getElementById("niveles");
-      contenedor.innerHTML = "";
-
-      const filtroDif = document.getElementById("filtroDificultad").value;
-      const filtroFecha = document.getElementById("filtroFecha").value;
-
-      let datosFiltrados = [...datosOriginales];
-
-      if (filtroDif === "facil-dificil") {
-        datosFiltrados.sort((a, b) => ordenDificultad.indexOf(a.dificultad) - ordenDificultad.indexOf(b.dificultad));
-      } else if (filtroDif === "dificil-facil") {
-        datosFiltrados.sort((a, b) => ordenDificultad.indexOf(b.dificultad) - ordenDificultad.indexOf(a.dificultad));
-      } else if (filtroDif === "especifica") {
-        const espec = prompt("Escribe la dificultad exacta:");
-        if (espec) {
-          datosFiltrados = datosFiltrados.filter(n => n.dificultad === espec.toLowerCase().trim());
-        }
-      }
-
-      if (filtroFecha === "nuevo") {
-        datosFiltrados.sort((a, b) => b.fecha - a.fecha);
-      } else if (filtroFecha === "antiguo") {
-        datosFiltrados.sort((a, b) => a.fecha - b.fecha);
-      }
-
-      if (datosFiltrados.length === 0) {
-        contenedor.innerHTML = "No hay niveles que coincidan con los filtros.";
-        return;
-      }
-
-      datosFiltrados.forEach(nivel => {
-        const div = document.createElement("div");
-        div.className = "nivel";
-        div.innerHTML = `
-          <h2>${nivel.nombre}</h2>
-          <div class="info">
-            <div>dificultad: ${nivel.dificultad}</div>
-            <div>${nivel.modo}</div>
-          </div>
-          <div>estrellas: ${nivel.estrellas}</div>
-          <div class="extra">subido por: ${nivel.autor}</div>
-          <button class="id-btn" onclick="copiarID('${nivel.id}')">copiar ID</button>
-        `;
-        contenedor.appendChild(div);
-      });
     }
 
     function copiarID(id) {
