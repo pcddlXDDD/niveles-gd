@@ -1,8 +1,8 @@
-<!DOCTYPE html>
-<html lang="es">
+<!DOCTYPE html><html lang="es">
 <head>
   <meta charset="UTF-8">
   <title>Lista de Niveles</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
       background-color: #121212;
@@ -10,92 +10,87 @@
       font-family: sans-serif;
       margin: 0;
       padding: 0;
-    }
+    }header {
+  position: fixed;
+  top: 0;
+  right: 0;
+  padding: 10px 15px;
+  background-color: #1e1e1e;
+  display: flex;
+  gap: 10px;
+  z-index: 100;
+  border-bottom-left-radius: 10px;
+}
 
-    header {
-      position: fixed;
-      top: 0;
-      right: 0;
-      padding: 10px 15px;
-      background-color: #1e1e1e;
-      display: flex;
-      gap: 10px;
-      z-index: 100;
-      border-bottom-left-radius: 10px;
-    }
+header a, header button, header select {
+  text-decoration: none;
+  background-color: #4CAF50;
+  color: white;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+}
 
-    header a, header button {
-      text-decoration: none;
-      background-color: #4CAF50;
-      color: white;
-      padding: 8px 12px;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 14px;
-    }
+header button {
+  background-color: #3a3a3a;
+}
 
-    header button {
-      background-color: #3a3a3a;
-    }
+h1 {
+  text-align: center;
+  margin-top: 70px;
+}
 
-    h1 {
-      text-align: center;
-      margin-top: 70px;
-    }
+.nivel {
+  background-color: #1e1e1e;
+  padding: 15px;
+  border-radius: 10px;
+  margin: 15px auto;
+  max-width: 500px;
+  box-shadow: 0 0 10px #00000055;
+}
 
-    .nivel {
-      background-color: #1e1e1e;
-      padding: 15px;
-      border-radius: 10px;
-      margin: 15px auto;
-      max-width: 500px;
-      box-shadow: 0 0 10px #00000055;
-      position: relative;
-    }
+.nivel h2 {
+  margin: 0;
+  font-size: 22px;
+}
 
-    .nivel h2 {
-      margin: 0;
-      font-size: 22px;
-    }
+.info {
+  display: flex;
+  justify-content: space-between;
+  margin: 10px 0;
+}
 
-    .info {
-      display: flex;
-      justify-content: space-between;
-      margin: 10px 0;
-    }
+.extra {
+  margin-top: 10px;
+}
 
-    .extra {
-      margin-top: 10px;
-    }
+.id-btn {
+  margin-top: 8px;
+  float: right;
+  background-color: #333;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
 
-    .id-btn {
-      position: absolute;
-      bottom: 10px;
-      right: 10px;
-      background-color: #333;
-      color: white;
-      border: none;
-      padding: 6px 12px;
-      border-radius: 6px;
-      cursor: pointer;
-    }
+.id-btn:hover {
+  background-color: #555;
+}
 
-    .id-btn:hover {
-      background-color: #555;
-    }
   </style>
 </head>
 <body>
   <header>
     <a href="https://tally.so/r/3y8WGd" target="_blank">subir niveles</a>
     <button onclick="cargarDatos()">🔄</button>
-  </header>
+  </header>  <h1>Lista de Niveles</h1>
+  <div id="niveles"></div>  <script>
+    let ultimoID = null;
 
-  <h1>Lista de Niveles</h1>
-  <div id="niveles"></div>
-
-  <script>
     async function cargarDatos() {
       const contenedor = document.getElementById("niveles");
       contenedor.innerHTML = "Cargando...";
@@ -106,7 +101,6 @@
         const [encabezadoRaw, ...datos] = filas;
 
         const encabezado = encabezadoRaw.map(h => h.trim().toLowerCase());
-
         const indices = {
           nombre: encabezado.indexOf("nombre del nivel"),
           dificultad: encabezado.indexOf("dificultad"),
@@ -117,7 +111,6 @@
         };
 
         contenedor.innerHTML = "";
-
         datos.forEach(fila => {
           const nivel = document.createElement("div");
           nivel.className = "nivel";
@@ -131,16 +124,23 @@
 
           nivel.innerHTML = `
             <h2>${nombre}</h2>
+            <button class="id-btn" onclick="copiarID('${id}')">copiar ID</button>
             <div class="info">
               <div>dificultad: ${dificultad}</div>
               <div>${modo}</div>
             </div>
             <div>estrellas: ${estrellas}</div>
             <div class="extra">subido por: ${autor}</div>
-            <button class="id-btn" onclick="copiarID('${id}')">copiar ID</button>
           `;
+
           contenedor.appendChild(nivel);
         });
+
+        // Guardar último ID para el SW
+        if (datos.length > 0) {
+          const nuevoID = datos[datos.length - 1][indices.id];
+          localStorage.setItem("ultimoID", nuevoID);
+        }
       } catch (e) {
         contenedor.innerHTML = "Error al cargar los niveles.";
         console.error(e);
@@ -153,7 +153,13 @@
         .catch(err => alert("Error al copiar ID"));
     }
 
+    // Registrar el Service Worker
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js')
+        .then(() => console.log("SW registrado"))
+        .catch(err => console.error("Error al registrar SW:", err));
+    }
+
     cargarDatos();
-  </script>
-</body>
+  </script></body>
 </html>
